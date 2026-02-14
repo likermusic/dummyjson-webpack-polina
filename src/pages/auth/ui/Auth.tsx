@@ -1,29 +1,21 @@
-import { Link } from "react-router-dom";
+import { setAuthenticated } from "@/shared/lib/auth";
 import { routes } from "@/shared/routes";
-
-type AuthPageProps = {
-  onLogin: () => void;
-};
-
-// export function AuthPage({ onLogin }: AuthPageProps) {
-//   return (
-//     <main>
-//       <h1>Authorization</h1>
-//       <p>Sign in to open protected pages.</p>
-//       <button type="button" onClick={onLogin}>
-//         Sign in
-//       </button>
-//     </main>
-//   );
-// }
+import { useNavigate } from "react-router-dom";
 
 export function Auth() {
+  const navigate = useNavigate();
+
+  const handleSignIn = () => {
+    setAuthenticated(true);
+    navigate(routes.products, { replace: true });
+  };
+
   return (
     <main>
       <h1>Authorization</h1>
       <p>Sign in to open protected pages.</p>
-      <button type="button">
-        <Link to={routes.products}>Sign in</Link>
+      <button type="button" onClick={handleSignIn}>
+        Sign in
       </button>
     </main>
   );
