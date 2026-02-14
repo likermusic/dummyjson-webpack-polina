@@ -1,5 +1,5 @@
+import { routes } from "@/shared/routes";
 import { Link } from "react-router-dom";
-import { getProductRoute } from "@/shared/routes";
 
 const demoProducts = [
   { id: 1, title: "Laptop" },
@@ -14,7 +14,7 @@ export function Products() {
       <ul>
         {demoProducts.map((product) => (
           <li key={product.id}>
-            <Link to={getProductRoute(product.id)}>{product.title}</Link>
+            <Link to={`${product.id}`}>{product.title}</Link>
           </li>
         ))}
       </ul>
