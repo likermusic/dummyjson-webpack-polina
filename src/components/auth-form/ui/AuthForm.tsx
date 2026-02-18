@@ -1,23 +1,8 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-
-import { authSchema } from "../types/types";
-import type { AuthCredentials } from "../types/types";
 import { useAuthForm } from "../model/useAuthForm";
 
 export function AuthForm() {
-  const { handleAuth } = useAuthForm();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<AuthCredentials>({
-    resolver: zodResolver(authSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
+  const { register, handleSubmit, errors, isSubmitting, onSubmit } =
+    useAuthForm();
 
   return (
     <section className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-10 text-white">
@@ -31,19 +16,24 @@ export function AuthForm() {
           </p>
         </header>
 
-        <form className="space-y-4" onSubmit={handleSubmit(handleAuth)}>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          {errors.root ? (
+            <div className="rounded-lg border border-rose-200/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-100">
+              {errors.root.message}
+            </div>
+          ) : null}
           <label className="block text-sm text-white/80">
-            Email
+            Username
             <input
               className="mt-2 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-              type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              {...register("email")}
+              type="text"
+              autoComplete="username"
+              placeholder="kminchelle"
+              {...register("username")}
             />
-            {errors.email ? (
+            {errors.username ? (
               <span className="mt-2 block text-xs text-rose-200">
-                {errors.email.message}
+                {errors.username.message}
               </span>
             ) : null}
           </label>
