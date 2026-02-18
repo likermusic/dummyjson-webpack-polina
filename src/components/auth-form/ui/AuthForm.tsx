@@ -1,5 +1,7 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
+import { authSchema } from "../types/types";
 import type { AuthCredentials } from "../types/types";
 import { useAuthForm } from "../model/useAuthForm";
 
@@ -10,6 +12,7 @@ export function AuthForm() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<AuthCredentials>({
+    resolver: zodResolver(authSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -36,13 +39,7 @@ export function AuthForm() {
               type="email"
               autoComplete="email"
               placeholder="you@example.com"
-              {...register("email", {
-                required: "Email is required",
-                pattern: {
-                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: "Enter a valid email",
-                },
-              })}
+              {...register("email")}
             />
             {errors.email ? (
               <span className="mt-2 block text-xs text-rose-200">
@@ -58,13 +55,7 @@ export function AuthForm() {
               type="password"
               autoComplete="current-password"
               placeholder="********"
-              {...register("password", {
-                required: "Password is required",
-                minLength: {
-                  value: 6,
-                  message: "Minimum 6 characters",
-                },
-              })}
+              {...register("password")}
             />
             {errors.password ? (
               <span className="mt-2 block text-xs text-rose-200">

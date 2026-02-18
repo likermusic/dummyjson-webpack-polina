@@ -5,9 +5,9 @@ import {
   Route,
   Routes,
 } from "react-router-dom";
-import { Auth } from "@/pages/auth/ui/Auth";
-import { Product } from "@/pages/product/ui/Product";
-import { Products } from "@/pages/products/ui/Products";
+import { Auth } from "@/pages/auth";
+import { Product } from "@/pages/product";
+import { Products } from "@/pages/products";
 import { isAuthenticated } from "@/shared/lib/auth";
 import { routes } from "@/shared/routes";
 
