@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
 import { routes } from "@/shared/routes";
+import type { AppThunk } from "@/app/store";
 import { setAuthenticated } from "@/shared/lib/auth";
 import { signIn } from "./authSlice";
 import type { AuthCredentials } from "../types/types";
@@ -12,7 +12,6 @@ import { authSchema } from "../types/types";
 
 export function useAuthForm() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
@@ -27,20 +26,22 @@ export function useAuthForm() {
     },
   });
 
-  const onSubmit = async (credentials: AuthCredentials) => {
-    clearErrors("root");
-    try {
-      await login(credentials);
-      setAuthenticated(true);
-      dispatch(signIn());
-      navigate(routes.products, { replace: true });
-    } catch {
-      setError("root", {
-        type: "server",
-        message: "Invalid username or password",
-      });
-    }
-  };
+  const onSubmit =
+    (credentials: AuthCredentials): AppThunk<Promise<void>> =>
+    async (dispatch, getState) => {
+      clearErrors("root");
+      try {
+        await login(credentials);
+        setAuthenticated(true);
+        dispatch(signIn());
+        navigate(routes.products, { replace: true });
+      } catch {
+        setError("root", {
+          type: "server",
+          message: "Invalid username or password",
+        });
+      }
+    };
 
   return {
     register,

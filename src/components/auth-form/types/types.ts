@@ -23,5 +23,4 @@ export type AuthResponse = {
   image: string;
   accessToken?: string;
   refreshToken?: string;
-  token?: string;
 };
