@@ -66,7 +66,14 @@ export function AuthForm() {
             type="submit"
             disabled={isSubmitting}
           >
-            Sign in
+            {isSubmitting ? (
+              <>
+                <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-950/30 border-t-slate-950" />
+                Signing in...
+              </>
+            ) : (
+              "Sign in"
+            )}
           </button>
         </form>
       </div>
