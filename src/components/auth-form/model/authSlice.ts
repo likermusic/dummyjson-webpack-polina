@@ -1,30 +1,42 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-import { isAuthenticated } from "@/shared/lib/auth";
-
 type AuthState = {
   isAuthenticated: boolean;
+  accessToken: string | null;
 };
 
 const initialState: AuthState = {
-  isAuthenticated: isAuthenticated(),
+  isAuthenticated: false,
+  accessToken: null,
 };
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    signIn(state) {
+    signIn(
+      state,
+      action: PayloadAction<{
+        accessToken: string | null;
+        refreshToken: string | null;
+      }>,
+    ) {
       state.isAuthenticated = true;
+      state.accessToken = action.payload.accessToken;
+      if (action.payload.refreshToken) {
+        localStorage.setItem("refreshToken", action.payload.refreshToken);
+      }
     },
     signOut(state) {
       state.isAuthenticated = false;
+      state.accessToken = null;
+      localStorage.removeItem("refreshToken");
     },
-    setAuthState(state, action: PayloadAction<boolean>) {
-      state.isAuthenticated = action.payload;
+    setAccessToken(state, action: PayloadAction<string | null>) {
+      state.accessToken = action.payload;
     },
   },
 });
 
-export const { signIn, signOut, setAuthState } = authSlice.actions;
+export const { signIn, signOut, setAccessToken } = authSlice.actions;
 export const authReducer = authSlice.reducer;

@@ -13,7 +13,7 @@ export const authSchema = z.object({
 
 export type AuthCredentials = z.infer<typeof authSchema>;
 
-export type AuthResponse = {
+export type AuthUser = {
   id: number;
   username: string;
   email: string;
@@ -21,6 +21,16 @@ export type AuthResponse = {
   lastName: string;
   gender: string;
   image: string;
-  accessToken?: string;
-  refreshToken?: string;
+};
+
+export type AuthLoginResponse = AuthUser & {
+  accessToken: string;
+  refreshToken: string;
+};
+
+export type AuthMeResponse = AuthUser;
+
+export type AuthRefreshResponse = {
+  accessToken: string;
+  refreshToken: string;
 };

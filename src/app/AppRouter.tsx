@@ -5,14 +5,16 @@ import {
   Route,
   Routes,
 } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { Auth } from "@/pages/auth";
 import { Product } from "@/pages/product";
 import { Products } from "@/pages/products";
-import { isAuthenticated } from "@/shared/lib/auth";
+import type { RootState } from "@/app/store";
 import { routes } from "@/shared/routes";
 
 function ProtectedRoute() {
-  if (!isAuthenticated()) {
+  const isAuth = useSelector((state: RootState) => state.auth.isAuthenticated);
+  if (!isAuth) {
     return <Navigate to={routes.auth} replace />;
   }
 
@@ -20,6 +22,8 @@ function ProtectedRoute() {
 }
 
 export function AppRouter() {
+  const isAuth = useSelector((state: RootState) => state.auth.isAuthenticated);
+
   return (
     <BrowserRouter>
       <Routes>
@@ -30,11 +34,7 @@ export function AppRouter() {
         <Route
           path={routes.auth}
           element={
-            isAuthenticated() ? (
-              <Navigate to={routes.products} replace />
-            ) : (
-              <Auth />
-            )
+            isAuth ? <Navigate to={routes.products} replace /> : <Auth />
           }
         />
         <Route element={<ProtectedRoute />}>

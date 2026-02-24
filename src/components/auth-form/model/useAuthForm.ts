@@ -4,11 +4,10 @@ import { useForm } from "react-hook-form";
 
 import { routes } from "@/shared/routes";
 import type { AppThunk } from "@/app/store";
-import { setAuthenticated } from "@/shared/lib/auth";
 import { signIn } from "./authSlice";
-import type { AuthCredentials } from "../types/types";
+import type { AuthCredentials } from "../types";
 import { login } from "../api/authApi";
-import { authSchema } from "../types/types";
+import { authSchema } from "../types";
 
 export function useAuthForm() {
   const navigate = useNavigate();
@@ -28,12 +27,16 @@ export function useAuthForm() {
 
   const onSubmit =
     (credentials: AuthCredentials): AppThunk<Promise<void>> =>
-    async (dispatch, getState) => {
+    async (dispatch) => {
       clearErrors("root");
       try {
-        await login(credentials);
-        setAuthenticated(true);
-        dispatch(signIn());
+        const data = await login(credentials);
+        dispatch(
+          signIn({
+            accessToken: data.accessToken ?? null,
+            refreshToken: data.refreshToken ?? null,
+          }),
+        );
         navigate(routes.products, { replace: true });
       } catch {
         setError("root", {
