@@ -7,7 +7,10 @@ import axios, {
 import { API_BASE_URL } from "./baseUrl";
 import type { AuthRefreshResponse } from "@/components/auth-form/types";
 import { store } from "@/app/store";
-import { setAccessToken } from "@/components/auth-form/model/authSlice";
+import {
+  setAccessToken,
+  signOut,
+} from "@/components/auth-form/model/authSlice";
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -59,6 +62,7 @@ protectedApi.interceptors.response.use(
         }
         return protectedApi.request(originalRequest);
       } catch (refreshError) {
+        store.dispatch(signOut());
         return Promise.reject(refreshError);
       }
     }
