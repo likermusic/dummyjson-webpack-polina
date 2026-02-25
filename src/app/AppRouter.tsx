@@ -11,6 +11,7 @@ import { Products } from "@/pages/products";
 import { store } from "@/app/store";
 import { getMe } from "@/components/auth-form/api/authApi";
 import { routes } from "@/shared/routes";
+import { AppLayout } from "@/shared/layouts/AppLayout";
 import { PageLayout } from "@/shared/layouts/PageLayout";
 
 const protectedLoader = async () => {
@@ -43,23 +44,28 @@ const authLoader = async () => {
 
 const router = createBrowserRouter([
   {
-    path: routes.root,
-    element: <Navigate to={routes.products} replace />,
-  },
-  {
-    path: routes.auth,
-    element: <Auth />,
-    loader: authLoader,
-  },
-  {
-    element: <PageLayout />,
-    loader: protectedLoader,
+    element: <AppLayout />,
     children: [
-      { path: routes.products, element: <Products /> },
-      { path: routes.product, element: <Product /> },
+      {
+        path: routes.root,
+        element: <Navigate to={routes.products} replace />,
+      },
+      {
+        path: routes.auth,
+        element: <Auth />,
+        loader: authLoader,
+      },
+      {
+        element: <PageLayout />,
+        loader: protectedLoader,
+        children: [
+          { path: routes.products, element: <Products /> },
+          { path: routes.product, element: <Product /> },
+        ],
+      },
+      { path: routes.notFound, element: <h1>404 Not Found</h1> },
     ],
   },
-  { path: routes.notFound, element: <h1>404 Not Found</h1> },
 ]);
 
 export function AppRouter() {
