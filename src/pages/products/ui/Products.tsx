@@ -1,4 +1,3 @@
-import { routes } from "@/shared/routes";
 import { Link } from "react-router-dom";
 
 const demoProducts = [
