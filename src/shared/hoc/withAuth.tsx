@@ -6,7 +6,9 @@ import type { RootState } from "@/app/store";
 
 export const withAuth = <P extends object>(Component: ComponentType<P>) => {
   return function ProtectedComponent(props: P) {
-    const isAuth = useSelector((state: RootState) => state.auth.isAuthenticated);
+    const isAuth = useSelector(
+      (state: RootState) => state.auth.accessToken !== null,
+    );
     if (!isAuth) {
       return <Navigate to={routes.auth} replace />;
     }
