@@ -1,10 +1,6 @@
-import { useDispatch } from "react-redux";
-
-import type { AppDispatch } from "@/app/store";
 import { useAuthForm } from "../model/useAuthForm";
 
 export function AuthForm() {
-  const dispatch = useDispatch<AppDispatch>();
   const { register, handleSubmit, errors, isSubmitting, onSubmit } =
     useAuthForm();
 
@@ -22,7 +18,7 @@ export function AuthForm() {
 
         <form
           className="space-y-4"
-          onSubmit={handleSubmit((data) => dispatch(onSubmit(data)))}
+          onSubmit={handleSubmit(onSubmit)}
         >
           {errors.root ? (
             <div className="rounded-lg border border-rose-200/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-100">

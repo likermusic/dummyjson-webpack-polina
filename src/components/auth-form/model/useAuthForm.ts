@@ -1,15 +1,16 @@
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
 
 import { routes } from "@/shared/routes";
-import type { AppThunk } from "@/app/store";
-import { signIn } from "./authSlice";
+import type { AppDispatch } from "@/app/store";
+import { signInByCredentials } from "./authSlice";
 import type { AuthCredentials } from "../types";
-import { login } from "../api/authApi";
 import { authSchema } from "../types";
 
 export function useAuthForm() {
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const {
     register,
@@ -25,26 +26,22 @@ export function useAuthForm() {
     },
   });
 
-  const onSubmit =
-    (credentials: AuthCredentials): AppThunk<Promise<void>> =>
-    async (dispatch) => {
-      clearErrors("root");
-      try {
-        const data = await login(credentials);
-        dispatch(
-          signIn({
-            accessToken: data.accessToken ?? null,
-            refreshToken: data.refreshToken ?? null,
-          }),
-        );
-        navigate(routes.products, { replace: true });
-      } catch {
-        setError("root", {
-          type: "server",
-          message: "Invalid username or password",
-        });
-      }
-    };
+  /*
+  Что делает .unwrap()? Он возвращает новый Promise. Если при выполнении thunk пришло успешное действие (fulfilled), то в этом новом Promise будет передан payload из этого действия — то есть данные, которые вы ждали. А если пришло действие с ошибкой (rejected), то метод .unwrap() бросает ошибку. Вы можете поймать эту ошибку обычным try/catch в компоненте.
+  */
+  const onSubmit = async (credentials: AuthCredentials) => {
+    clearErrors("root");
+    try {
+      await dispatch(signInByCredentials(credentials)).unwrap();
+      navigate(routes.products, { replace: true });
+    } catch (error) {
+      setError("root", {
+        type: "server",
+        message:
+          typeof error === "string" ? error : "Invalid username or password",
+      });
+    }
+  };
 
   return {
     register,
