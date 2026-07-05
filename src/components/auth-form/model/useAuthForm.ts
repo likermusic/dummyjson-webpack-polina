@@ -1,17 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useDispatch } from "react-redux";
 
 import { routes } from "@/shared/routes";
-import type { AppDispatch } from "@/app/store";
-import { signInByCredentials } from "./authSlice";
+import { useLoginMutation } from "../api/authApi";
 import type { AuthCredentials } from "../types";
 import { authSchema } from "../types";
 
 export function useAuthForm() {
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const [login, { isLoading }] = useLoginMutation();
   const {
     register,
     handleSubmit,
@@ -32,7 +30,7 @@ export function useAuthForm() {
   const onSubmit = async (credentials: AuthCredentials) => {
     clearErrors("root");
     try {
-      await dispatch(signInByCredentials(credentials)).unwrap();
+      await login(credentials).unwrap();
       navigate(routes.products, { replace: true });
     } catch (error) {
       setError("root", {
@@ -47,7 +45,7 @@ export function useAuthForm() {
     register,
     handleSubmit,
     errors,
-    isSubmitting,
+    isSubmitting: isSubmitting || isLoading,
     onSubmit,
   };
 }

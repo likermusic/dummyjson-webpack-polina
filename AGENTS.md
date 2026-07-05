@@ -4,7 +4,7 @@ This document defines implementation rules for this repository based on the curr
 
 ## 1. Project Snapshot (Current State)
 
-- Stack: React 19 + TypeScript + Redux Toolkit + React Router + Axios + Tailwind CSS.
+- Stack: React 19 + TypeScript + Redux Toolkit + RTK Query + React Router + Tailwind CSS.
 - Bundler: Webpack (`webpack.config.cjs`), not Vite.
 - Package manager lock: npm (`package-lock.json`, lockfileVersion `3`).
 - Lint/format: ESLint flat config + Prettier (`.prettierrc` is empty object).
@@ -35,8 +35,16 @@ src/
       ui/
       index.ts
       types.ts
+    products-list/
+      api/
+      model/
+      ui/
+      index.ts
+      types.ts
   shared/
     api/
+    lib/
+    ui/
     hoc/
     layouts/
     routes.ts
@@ -71,18 +79,11 @@ src/
 - `pages` import from `components`, `shared`.
 - `components` import from `shared`.
 
-### Boundary issue currently present (must be fixed gradually)
+### Boundary note
 
-`src/shared/api/client.ts` imports:
-- `@/components/auth-form/types`
-- `@/components/auth-form/model/authSlice`
-- `@/app/store`
-
-This creates reverse dependency from `shared` to upper layers.
-
-`TODO/Recommendation`:
-- Move auth-refresh orchestration out of `shared/api/client.ts` into an auth-specific module (for example under `components/auth-form/api` or future `features/auth`).
-- Keep `shared/api` framework-level only.
+- `src/shared/api/baseApi.ts` is framework-level RTK Query setup only.
+- Feature endpoints live in their own `api/` folders and inject into `baseApi`.
+- Auth-specific refresh orchestration belongs to `components/auth-form/api`, not `shared/api`.
 
 ## 3. Naming and Component Conventions
 
@@ -100,12 +101,9 @@ This creates reverse dependency from `shared` to upper layers.
 ## TS/React style examples
 
 ```ts
-// good: strongly typed thunk return
-const onSubmit =
-  (credentials: AuthCredentials): AppThunk<Promise<void>> =>
-  async (dispatch) => {
-    // ...
-  };
+// good: RTK Query mutation with typed request/response
+const [login] = useLoginMutation();
+await login(credentials).unwrap();
 ```
 
 ```tsx
@@ -165,22 +163,23 @@ navigate(routes.products, { replace: true });
 
 - Base URL is hardcoded in `src/shared/api/baseUrl.ts`:
 - `API_BASE_URL = "https://dummyjson.com"`
-- Axios instances:
-- `api` (public)
-- `protectedApi` (adds `Authorization: Bearer <accessToken>` from Redux state)
+- RTK Query base API:
+- `baseApi` in `src/shared/api/baseApi.ts`
+- Feature endpoints are injected from `components/*/api`.
+- `prepareHeaders` attaches `Authorization: Bearer <accessToken>` from Redux state.
 
 ## Rules
 
 - Keep endpoint contracts typed with request/response TypeScript types.
-- API functions should return `response.data` only.
-- Do not call `axios` directly in UI components; use module API wrappers.
-- Centralize cross-cutting concerns (headers, token attach, retries) in client/interceptor layer.
+- Prefer RTK Query endpoints and generated hooks for server state.
+- Do not call `fetch` directly in UI components; use feature endpoint modules.
+- Centralize cross-cutting concerns such as base URL and token attach in `baseApi`.
 
 ## Error handling rules
 
 Current behavior:
 - UI-level auth submission catches any error and shows generic message.
-- Interceptor retries once on 401 using `x-retry` header guard.
+- Auth `getMe` endpoint handles 401 by refreshing the access token and retrying once.
 
 Required practice:
 - Map known backend error shapes to user-safe messages in feature `api/model` layer.
@@ -193,7 +192,7 @@ Current state:
 - No generic retry/backoff policy except auth 401 refresh retry.
 
 `TODO/Recommendation`:
-- Use `AbortController`/axios `signal` for request cancellation in long-running or unmounted flows.
+- Use RTK Query cancellation/refetch controls for long-running or unmounted flows.
 - Add explicit retry policy only for idempotent requests.
 
 ## 6. Auth Rules and 401 Handling
@@ -204,17 +203,16 @@ Current state:
 - `refreshToken`: stored in `localStorage`.
 - Login endpoint: `/auth/login`.
 - Refresh endpoint: `/auth/refresh` with `{ refreshToken }` body.
-- Me endpoint: `/auth/me` via `protectedApi`.
-- Router loaders (`AppRouter.tsx`) use `getMe()` to guard auth/protected routes.
+- Me endpoint: `/auth/me` via `authApi.endpoints.getMe`.
+- Router loaders (`AppRouter.tsx`) dispatch `authApi.endpoints.getMe.initiate(...)` to guard auth/protected routes.
 
 ## 401 flow (current)
 
-1. `protectedApi` request gets 401.
-2. If `x-retry` header absent, set `x-retry: 1`.
-3. Call refresh endpoint using stored `refreshToken`.
-4. On success, dispatch `setAccessToken`, optionally rotate refresh token in localStorage.
-5. Replay original request.
-6. On refresh failure, dispatch `signOut` and reject.
+1. `authApi.getMe` request gets 401.
+2. Call refresh endpoint using stored `refreshToken`.
+3. On success, dispatch `setAccessToken`, optionally rotate refresh token in localStorage.
+4. Replay `/auth/me` once.
+5. On refresh failure, dispatch `signOut` and reject.
 
 ## Security rule for future
 
@@ -227,9 +225,10 @@ Current project uses localStorage for refresh token.
 
 ## Current state management
 
-- Redux Toolkit with one slice: `auth`.
-- Thunk typing is centralized in `AppThunk` from `app/store.ts`.
-- Async form submit dispatches thunk from `useAuthForm`.
+- Redux Toolkit with one app slice: `auth`.
+- RTK Query stores server state under `baseApi.reducerPath`.
+- Async form submit uses `useLoginMutation` from `authApi`.
+- Product list/detail requests use generated hooks from `productsApi`.
 
 ## Rules
 
@@ -239,7 +238,7 @@ Current project uses localStorage for refresh token.
 
 `TODO/Recommendation`:
 - Add `useAppDispatch` / `useAppSelector` wrappers in `shared/lib` when more slices appear.
-- Decide and document whether future server-state should remain manual Axios + Redux thunks or move to RTK Query.
+- Keep server state in RTK Query unless there is a clear reason to model it manually.
 
 ## 8. Testing Strategy and Minimum Required Tests
 
@@ -254,7 +253,7 @@ Current project uses localStorage for refresh token.
 - `useAuthForm` behavior (success path, invalid credentials path).
 
 - Integration:
-- `protectedApi` interceptor flow:
+- `authApi.getMe` refresh flow:
 - attaches bearer token
 - retries once on 401
 - signs out on refresh failure
@@ -302,5 +301,4 @@ Before merge, every PR should satisfy:
 - Add TypeScript-aware ESLint config.
 - Add test runner and baseline tests.
 - Add CI pipeline for lint/typecheck/build/test.
-- Move auth-specific logic out of `shared/api/client.ts` to remove layer inversion.
 - Move `API_BASE_URL` to env-based configuration with `.env.example` once env pipeline is introduced.

@@ -1,29 +1,11 @@
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-
-import type { AppDispatch } from "@/app/store";
-import {
-  fetchProducts,
-  selectProducts,
-  selectProductsError,
-  selectProductsStatus,
-} from "./productsSlice";
+import { useGetProductsQuery } from "../api/productsApi";
 
 export function useProducts() {
-  const dispatch = useDispatch<AppDispatch>();
-  const products = useSelector(selectProducts);
-  const status = useSelector(selectProductsStatus);
-  const error = useSelector(selectProductsError);
-
-  useEffect(() => {
-    if (status === "idle") {
-      void dispatch(fetchProducts());
-    }
-  }, [dispatch, status]);
+  const { data, isLoading, isFetching, error } = useGetProductsQuery();
 
   return {
-    products,
-    isLoading: status === "loading",
-    error,
+    products: data?.products ?? [],
+    isLoading: isLoading || isFetching,
+    error: error ? "Failed to load products. Please try again." : null,
   };
 }

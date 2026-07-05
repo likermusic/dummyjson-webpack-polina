@@ -1,20 +1,16 @@
-import { configureStore, type Action, type ThunkAction } from "@reduxjs/toolkit";
+import { configureStore } from "@reduxjs/toolkit";
 
 import { authReducer } from "@/components/auth-form/model/authSlice";
-import { productsReducer } from "@/components/products-list/model/productsSlice";
+import { baseApi } from "@/shared/api/baseApi";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    products: productsReducer,
+    [baseApi.reducerPath]: baseApi.reducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(baseApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
-export type AppThunk<ReturnType = void> = ThunkAction<
-  ReturnType,
-  RootState,
-  unknown,
-  Action
->;

@@ -1,33 +1,21 @@
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { skipToken } from "@reduxjs/toolkit/query";
 
-import type { AppDispatch } from "@/app/store";
-import {
-  fetchProductById,
-  selectSelectedProduct,
-  selectSelectedProductError,
-  selectSelectedProductStatus,
-} from "./productsSlice";
+import { useGetProductQuery } from "../api/productsApi";
 
 export function useProduct(id: string | undefined) {
-  const dispatch = useDispatch<AppDispatch>();
-  const product = useSelector(selectSelectedProduct);
-  const status = useSelector(selectSelectedProductStatus);
-  const error = useSelector(selectSelectedProductError);
   const productId = Number(id);
   const isValidProductId = Number.isInteger(productId) && productId > 0;
-
-  useEffect(() => {
-    if (isValidProductId && product?.id !== productId) {
-      void dispatch(fetchProductById(productId));
-    }
-  }, [dispatch, isValidProductId, product?.id, productId]);
+  const { data, isLoading, isFetching, error } = useGetProductQuery(
+    isValidProductId ? productId : skipToken,
+  );
 
   return {
-    product,
-    isLoading: status === "loading" || status === "idle",
+    product: data ?? null,
+    isLoading: isLoading || isFetching,
     error: isValidProductId
       ? error
+        ? "Failed to load product. Please try again."
+        : null
       : "Invalid product id. Please go back to the products list.",
   };
 }

@@ -9,10 +9,22 @@ import { Auth } from "@/pages/auth";
 import { Product } from "@/pages/product";
 import { Products } from "@/pages/products";
 import { store } from "@/app/store";
-import { getMe } from "@/components/auth-form/api/authApi";
+import { authApi } from "@/components/auth-form/api/authApi";
 import { routes } from "@/shared/routes";
 import { AppLayout } from "@/shared/layouts/AppLayout";
 import { PageLayout } from "@/shared/layouts/PageLayout";
+
+const getMe = async () => {
+  const request = store.dispatch(
+    authApi.endpoints.getMe.initiate(undefined, { forceRefetch: true }),
+  );
+
+  try {
+    await request.unwrap();
+  } finally {
+    request.unsubscribe();
+  }
+};
 
 const protectedLoader = async () => {
   const accessToken = store.getState().auth.accessToken;
