@@ -1,5 +1,5 @@
 import { api } from "@/shared/api/client";
-import type { ProductsResponse } from "../types";
+import type { Product, ProductsResponse } from "../types";
 
 type GetProductsParams = {
   limit?: number;
@@ -13,6 +13,12 @@ export const getProducts = async ({
   const response = await api.get<ProductsResponse>("/products", {
     params: { limit, skip },
   });
+
+  return response.data;
+};
+
+export const getProductById = async (id: number) => {
+  const response = await api.get<Product>(`/products/${id}`);
 
   return response.data;
 };
